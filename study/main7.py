@@ -12,6 +12,7 @@ import tensorflow as tf
 from tensorflow.keras import models, layers
 from tensorflow.python.keras import optimizers
 
+
 train = pd.read_csv('train.csv')
 test = pd.read_csv('test.csv')
 submission = pd.read_csv('sample_submission.csv')
@@ -75,51 +76,58 @@ y_train = np.array(y_train, np.int32)
 y_valid = np.array(y_valid, np.int32)
 
 
-def reset_seed(seed=0):
-    os.environ['PYTHONHASHSEED'] = '0'
-    random.seed(seed)  # random関数のシードを固定
-    np.random.seed(seed)  # numpyのシードを固定
-    tf.random.set_seed(seed)  # tensorflowのシードを固定
+# def reset_seed(seed=0):
+#     os.environ['PYTHONHASHSEED'] = '0'
+#     random.seed(seed)  # random関数のシードを固定
+#     np.random.seed(seed)  # numpyのシードを固定
+#     tf.random.set_seed(seed)  # tensorflowのシードを固定
+#
+#
+# reset_seed(0)
+#
+# # モデルの構築
+# model = tf.keras.models.Sequential([
+#     tf.keras.layers.BatchNormalization(input_shape=(155,)),
+#     tf.keras.layers.Dense(155, activation='relu'),
+#     tf.keras.layers.Dropout(0.2),
+#     tf.keras.layers.Dense(155, activation='relu'),
+#     tf.keras.layers.Dropout(0.2),
+#     tf.keras.layers.Dense(155, activation='relu'),
+#     tf.keras.layers.Dropout(0.2),
+#     tf.keras.layers.Dense(78, activation='relu'),
+#     tf.keras.layers.Dense(39, activation='relu'),
+#     tf.keras.layers.Dense(20, activation='relu'),
+#     tf.keras.layers.Dense(1, activation='sigmoid'),
+# ])
+#
+# optimizer = optimizers.Adam(lr=0.003)
+#
+# # モデルのコンパイル
+# model.compile(optimizer='adam',
+#               loss='binary_crossentropy',
+#               metrics=['acc'])
+#
+# # モデルの学習
+# history = model.fit(X_train, y_train,
+#                     batch_size=10,
+#                     epochs=50,
+#                     validation_data=(X_valid, y_valid))
+#
+# print(history.history)
+# result = pd.DataFrame(history.history)
+# print(result.head())
+#
+# # result[['loss', 'val_loss']].plot()
+# # result[['accuracy', 'val_accuracy']].plot()
+# # plt.show()
+#
+# model.save(filepath='wine_model.h5', save_format='h5')
 
-
-reset_seed(0)
-
-# モデルの構築
-model = tf.keras.models.Sequential([
-    tf.keras.layers.BatchNormalization(input_shape=(155,)),
-    tf.keras.layers.Dense(155, activation='relu'),
-    tf.keras.layers.Dropout(0.2),
-    tf.keras.layers.Dense(155, activation='relu'),
-    tf.keras.layers.Dropout(0.2),
-    tf.keras.layers.Dense(155, activation='relu'),
-    tf.keras.layers.Dropout(0.2),
-    tf.keras.layers.Dense(78, activation='relu'),
-    tf.keras.layers.Dense(39, activation='relu'),
-    tf.keras.layers.Dense(20, activation='relu'),
-    tf.keras.layers.Dense(1, activation='sigmoid'),
-])
-
-# モデルのコンパイル
-model.compile(optimizer=optimizers.RMSprop(lr=1e-4),
-              loss='binary_crossentropy',
-              metrics=['acc'])
-
-# モデルの学習
-history = model.fit(X_train, y_train,
-                    batch_size=10,
-                    epochs=50,
-                    validation_data=(X_valid, y_valid))
-
-print(history.history)
-result = pd.DataFrame(history.history)
-print(result.head())
-
-result[['loss', 'val_loss']].plot()
-result[['accuracy', 'val_accuracy']].plot()
-plt.show()
-
-model.save(filepath='wine_model.h5', save_format='h5')
-
+loaded_model = tf.keras.models.load_model('wine_model.h5')
+sample = X_test
+print(sample.shape)
+y = loaded_model.predict(sample)
+print(y.shape)
 # lgb_train = lgb.Dataset(X_train, y_train)
 # lgb_eval = lgb.Dataset(X_valid, y_valid, reference=lgb_train)
 #

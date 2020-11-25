@@ -1,12 +1,8 @@
 import pandas as pd
 import matplotlib.pyplot as plt
-import numpy as np
 import lightgbm as lgb
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import GridSearchCV
-import sys
 
 train = pd.read_csv('train.csv')
 test = pd.read_csv('test.csv')

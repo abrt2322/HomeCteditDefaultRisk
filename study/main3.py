@@ -1,16 +1,15 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
-import lightgbm as lgb
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import GridSearchCV
 
-
 train = pd.read_csv('train.csv')
 test = pd.read_csv('test.csv')
 submission = pd.read_csv('sample_submission.csv')
+
 
 def missing_values_summary(df):
     mis_val = df.isnull().sum()
@@ -83,9 +82,6 @@ for i in range(num_trials):
 plt.scatter(np.arange(num_trials), data)
 
 plt.show()
-
-
-
 
 # lgb_train = lgb.Dataset(X_train, y_train)
 # lgb_eval = lgb.Dataset(X_valid, y_valid, reference=lgb_train)

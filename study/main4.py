@@ -1,7 +1,6 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
-import lightgbm as lgb
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.ensemble import RandomForestClassifier
@@ -14,6 +13,7 @@ submission = pd.read_csv('sample_submission.csv')
 data = pd.concat([train, test], sort=False)
 data = data.drop(['SK_ID_CURR'], axis=1)
 
+
 def missing_values_summary(df):
     mis_val = df.isnull().sum()
     mis_val_percent = 100 * df.isnull().sum() / len(df)
@@ -23,6 +23,7 @@ def missing_values_summary(df):
         'mis_val_percent', ascending=False).round(1)
     print("カラム数：" + str(df.shape[1]) + "\n" + "欠損値のカラム数： " + str(mis_val_table_ren_columns.shape[0]))
     return mis_val_table_ren_columns
+
 
 null_sum = 0
 drop_flag = None
@@ -81,4 +82,3 @@ for i in range(num_trials):
 plt.scatter(np.arange(num_trials), data)
 plt.ylim([0, 1])
 plt.show()
-

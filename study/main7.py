@@ -1,17 +1,10 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
-import lightgbm as lgb
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import MinMaxScaler
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import GridSearchCV
-import sys
-import os, random
+import os
+import random
 import tensorflow as tf
-from tensorflow.keras import models, layers
-from tensorflow.python.keras import optimizers
-
 
 train = pd.read_csv('train.csv')
 test = pd.read_csv('test.csv')
@@ -46,10 +39,16 @@ for col in data.columns:
     if drop_flag:
         data = data.drop(col, axis=1)
 
+data = data.replace('XNA', 'F')
+
 for bin_feature in ['CODE_GENDER', 'FLAG_OWN_CAR', 'FLAG_OWN_REALTY']:
     data[bin_feature], uniques = pd.factorize(data[bin_feature])
 
-data = data[data['CODE_GENDER'] != 'XNA']
+drop_flag = None
+for col in data.columns:
+    if data[col].dtype == object:
+        data = data.drop(col, axis=1)
+
 data = data.drop(['OWN_CAR_AGE'], axis=1)
 
 data['DAYS_EMPLOYED_PERC'] = data['DAYS_EMPLOYED'] / data['DAYS_BIRTH']
@@ -58,90 +57,86 @@ data['INCOME_PER_PERSON'] = data['AMT_INCOME_TOTAL'] / data['CNT_FAM_MEMBERS']
 data['ANNUITY_INCOME_PERC'] = data['AMT_ANNUITY'] / data['AMT_INCOME_TOTAL']
 data['PAYMENT_RATE'] = data['AMT_ANNUITY'] / data['AMT_CREDIT']
 
-data = pd.get_dummies(data)
-mms = MinMaxScaler()
-data[data.columns] = mms.fit_transform(data[data.columns])
-
 train = data[:len(train)]
 test = data[len(train):]
 X_train = train.drop('TARGET', axis=1)
 X_test = test.drop('TARGET', axis=1)
 y_train = train['TARGET']
 
-X_train, X_valid, y_train, y_valid = train_test_split(X_train, y_train, test_size=0.3, random_state=0, stratify=y_train)
+print(type(X_train.values))
+print(np.unique(y_train.values))
+print(type(y_train.values))
+
+X_train, X_valid, y_train, y_valid = train_test_split(X_train.values, y_train.values, train_size=0.7, random_state=0,
+                                                      stratify=y_train)
+
+print(X_train.shape)
+print(X_train.dtype)
+print(X_valid.shape)
+print(X_valid.dtype)
+print('*' * 40)
+print(y_train.shape)
+print(y_train.dtype)
+print(y_valid.shape)
+print(y_valid.dtype)
+print('\n' * 2)
 
 X_train = np.array(X_train, np.float32)
 X_valid = np.array(X_valid, np.float32)
 y_train = np.array(y_train, np.int32)
 y_valid = np.array(y_valid, np.int32)
 
+print(X_train.shape)
+print(X_train.dtype)
+print(X_valid.shape)
+print(X_valid.dtype)
+print('*' * 40)
+print(y_train.shape)
+print(y_train.dtype)
+print(y_valid.shape)
+print(y_valid.dtype)
 
-# def reset_seed(seed=0):
-#     os.environ['PYTHONHASHSEED'] = '0'
-#     random.seed(seed)  # random関数のシードを固定
-#     np.random.seed(seed)  # numpyのシードを固定
-#     tf.random.set_seed(seed)  # tensorflowのシードを固定
-#
-#
-# reset_seed(0)
-#
+
+def reset_seed(seed=0):
+    os.environ['PYTHONHASHSEED'] = '0'
+    random.seed(seed)  # random関数のシードを固定
+    np.random.seed(seed)  # numpyのシードを固定
+    tf.random.set_seed(seed)  # tensorflowのシードを固定
+
+
+reset_seed(0)
+
 # # モデルの構築
 # model = tf.keras.models.Sequential([
-#     tf.keras.layers.BatchNormalization(input_shape=(155,)),
-#     tf.keras.layers.Dense(155, activation='relu'),
+#     tf.keras.layers.BatchNormalization(input_shape=(45,)),
+#     tf.keras.layers.Dense(45, activation='relu'),
 #     tf.keras.layers.Dropout(0.2),
-#     tf.keras.layers.Dense(155, activation='relu'),
-#     tf.keras.layers.Dropout(0.2),
-#     tf.keras.layers.Dense(155, activation='relu'),
-#     tf.keras.layers.Dropout(0.2),
-#     tf.keras.layers.Dense(78, activation='relu'),
-#     tf.keras.layers.Dense(39, activation='relu'),
 #     tf.keras.layers.Dense(20, activation='relu'),
 #     tf.keras.layers.Dense(1, activation='sigmoid'),
 # ])
 #
-# optimizer = optimizers.Adam(lr=0.003)
-#
 # # モデルのコンパイル
 # model.compile(optimizer='adam',
 #               loss='binary_crossentropy',
-#               metrics=['acc'])
+#               metrics=['accuracy'])
 #
 # # モデルの学習
 # history = model.fit(X_train, y_train,
 #                     batch_size=10,
-#                     epochs=50,
+#                     epochs=10,
 #                     validation_data=(X_valid, y_valid))
 #
 # print(history.history)
 # result = pd.DataFrame(history.history)
 # print(result.head())
 #
-# # result[['loss', 'val_loss']].plot()
-# # result[['accuracy', 'val_accuracy']].plot()
-# # plt.show()
-#
-# model.save(filepath='wine_model.h5', save_format='h5')
-
-loaded_model = tf.keras.models.load_model('wine_model.h5')
-sample = X_test
-print(sample.shape)
-y = loaded_model.predict(sample)
-print(y.shape)
-# lgb_train = lgb.Dataset(X_train, y_train)
-# lgb_eval = lgb.Dataset(X_valid, y_valid, reference=lgb_train)
-#
-# params = {'task': 'train', 'boosting_type': 'gbdt', 'objective': 'binary', 'metric': 'auc',
-#           'learning_rate': 0.01, 'num_leaves': 48, 'num_iteration': 5000, 'verbose': 0,
-#           'colsample_bytree': .8, 'subsample': .9, 'max_depth': 7, 'reg_alpha': .1, 'reg_lambda': .1,
-#           'min_split_gain': .01, 'min_child_weight': 1}
-#
-# # model = lgb.train(params, lgb_train, valid_sets=lgb_eval, early_stopping_rounds=150, verbose_eval=200)
-# model = lgb.train(params, lgb_train, valid_sets=[lgb_train, lgb_eval], verbose_eval=10, num_boost_round=1000,
-#                   early_stopping_rounds=10)
-# lgb.plot_importance(model, figsize=(12, 50))
+# result[['loss', 'val_loss']].plot()
+# result[['accuracy', 'val_accuracy']].plot()
 # plt.show()
 #
-# y_pred = model.predict(X_test, num_iteration=model.best_iteration)
-# submission['TARGET'] = y_pred
-# submission.to_csv('../csv/6thSub.csv', index=False)
+# model.save(filepath='model.h5', save_format='h5')
+
+loaded_model = tf.keras.models.load_model('model.h5')
+y = loaded_model.predict(X_test.values)
+submission['TARGET'] = y
+submission.to_csv('../csv/7thSub.csv', index=False)

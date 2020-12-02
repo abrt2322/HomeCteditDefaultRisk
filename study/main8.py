@@ -137,7 +137,7 @@ print(y_valid.dtype)
 #
 # model.save(filepath='model_object.h5', save_format='h5')
 
-loaded_model = tf.keras.models.load_model('model.h5')
+loaded_model = tf.keras.models.load_model('model_object.h5')
 y = loaded_model.predict(X_test.values)
 submission['TARGET'] = y
 submission.to_csv('../csv/8thSub.csv', index=False)

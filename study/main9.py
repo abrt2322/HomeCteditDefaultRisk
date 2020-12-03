@@ -68,7 +68,7 @@ count_train_class_one = y_train.sum()
 print('クラス1のサンプル数:{}'.format(count_train_class_one)) #クラス1のサンプル数表示
 
 # クラス0：クラス1=9:1になるまでクラス1を増やす
-smote = SMOTE(sampling_strategy = 0.1, random_state=100)
+smote = SMOTE(sampling_strategy=0.1, random_state=100)
 
 # 学習用データに反映
 x_train_smote, y_train_smote = smote.fit_sample(X_train, y_train)
@@ -147,7 +147,6 @@ params = {
     'max_depth': study.best_params['max_depth'],
     'lambda_l1': study.best_params['lambda_l1'],
     'lambda_l2': study.best_params['lambda_l2'],
-    # 'early_stopping_round': study.best_params['early_stopping_round'],
     'min_child_weight': study.best_params['min_child_weight'],
     'max_bin': study.best_params['max_bin'],
     'num_leaves': study.best_params['num_leaves'],

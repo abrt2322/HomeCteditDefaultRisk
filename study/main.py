@@ -44,15 +44,15 @@ for col in data.columns:
         data = data.drop(col, axis=1)
 
 # データに関する欠損情報や詳細なデータの型などをみる
-# print(missing_values_summary(train))
-# print('-'*40)
-# print(missing_values_summary(test))
-# print('\n\n\n')
-#
-# print(train.info())
-# print('-'*40)
-# print(test.info())
-# print('\n\n\n')
+print(missing_values_summary(train))
+print('-'*40)
+print(missing_values_summary(test))
+print('\n\n\n')
+
+print(train.info())
+print('-'*40)
+print(test.info())
+print('\n\n\n')
 
 data['FLAG_OWN_CAR'].replace(['N', 'Y'], [0, 1], inplace=True)
 data['FLAG_OWN_REALTY'].replace(['N', 'Y'], [0, 1], inplace=True)
@@ -61,22 +61,22 @@ data['FLAG_OWN_REALTY'].replace(['N', 'Y'], [0, 1], inplace=True)
 #     if data[col].dtype == object:
 #         print(pd.get_dummies(data[col]))
 
-data = pd.get_dummies(data)
-
-train = data[:len(train)]
-test = data[len(train):]
-X_train = train.drop('TARGET', axis=1)
-X_test = test.drop('TARGET', axis=1)
-y_train = train['TARGET']
-
-X_train, X_valid, y_train, y_valid = train_test_split(X_train, y_train, test_size=0.3, random_state=0, stratify=y_train)
-lgb_train = lgb.Dataset(X_train, y_train)
-lgb_eval = lgb.Dataset(X_valid, y_valid, reference=lgb_train)
-params = {
-    'objective': 'binary'
-}
-model = lgb.train(params, lgb_train, valid_sets=[lgb_train, lgb_eval], verbose_eval=10, num_boost_round=1000,
-                  early_stopping_rounds=10)
-y_pred = model.predict(X_test, num_iteration=model.best_iteration)
-submission['TARGET'] = y_pred
-submission.to_csv('./1stSub.csv', index=False)
+# data = pd.get_dummies(data)
+#
+# train = data[:len(train)]
+# test = data[len(train):]
+# X_train = train.drop('TARGET', axis=1)
+# X_test = test.drop('TARGET', axis=1)
+# y_train = train['TARGET']
+#
+# X_train, X_valid, y_train, y_valid = train_test_split(X_train, y_train, test_size=0.3, random_state=0, stratify=y_train)
+# lgb_train = lgb.Dataset(X_train, y_train)
+# lgb_eval = lgb.Dataset(X_valid, y_valid, reference=lgb_train)
+# params = {
+#     'objective': 'binary'
+# }
+# model = lgb.train(params, lgb_train, valid_sets=[lgb_train, lgb_eval], verbose_eval=10, num_boost_round=1000,
+#                   early_stopping_rounds=10)
+# y_pred = model.predict(X_test, num_iteration=model.best_iteration)
+# submission['TARGET'] = y_pred
+# submission.to_csv('./1stSub.csv', index=False)

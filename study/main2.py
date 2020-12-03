@@ -59,9 +59,9 @@ for col in data.columns:
 data['FLAG_OWN_CAR'].replace(['N', 'Y'], [0, 1], inplace=True)
 data['FLAG_OWN_REALTY'].replace(['N', 'Y'], [0, 1], inplace=True)
 
-# for col in data.columns:
-#     if data[col].dtype == object:
-#         print(pd.get_dummies(data[col]))
+for col in data.columns:
+    if data[col].dtype == object:
+        print(pd.get_dummies(data[col]))
 
 data = pd.get_dummies(data)
 mms = MinMaxScaler()

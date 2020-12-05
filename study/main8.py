@@ -99,43 +99,43 @@ print(y_valid.shape)
 print(y_valid.dtype)
 
 
-# def reset_seed(seed=0):
-#     os.environ['PYTHONHASHSEED'] = '0'
-#     random.seed(seed)  # random関数のシードを固定
-#     np.random.seed(seed)  # numpyのシードを固定
-#     tf.random.set_seed(seed)  # tensorflowのシードを固定
-#
-# reset_seed(0)
-#
-# # モデルの構築
-# model = tf.keras.models.Sequential([
-#     tf.keras.layers.BatchNormalization(input_shape=(45,)),
-#     tf.keras.layers.Dense(45, activation='relu'),
-#     tf.keras.layers.Dropout(0.2),
-#     tf.keras.layers.Dense(20, activation='relu'),
-#     tf.keras.layers.Dense(1, activation='sigmoid'),
-# ])
-#
-# # モデルのコンパイル
-# model.compile(optimizer='adam',
-#               loss='binary_crossentropy',
-#               metrics=['accuracy'])
-#
-# # モデルの学習
-# history = model.fit(X_train, y_train,
-#                     batch_size=1000,
-#                     epochs=20,
-#                     validation_data=(X_valid, y_valid))
-#
-# print(history.history)
-# result = pd.DataFrame(history.history)
-# print(result.head())
-#
-# result[['loss', 'val_loss']].plot()
-# result[['accuracy', 'val_accuracy']].plot()
-# plt.show()
-#
-# model.save(filepath='model_object.h5', save_format='h5')
+def reset_seed(seed=0):
+    os.environ['PYTHONHASHSEED'] = '0'
+    random.seed(seed)  # random関数のシードを固定
+    np.random.seed(seed)  # numpyのシードを固定
+    tf.random.set_seed(seed)  # tensorflowのシードを固定
+
+reset_seed(0)
+
+# モデルの構築
+model = tf.keras.models.Sequential([
+    tf.keras.layers.BatchNormalization(input_shape=(45,)),
+    tf.keras.layers.Dense(45, activation='relu'),
+    tf.keras.layers.Dropout(0.2),
+    tf.keras.layers.Dense(20, activation='relu'),
+    tf.keras.layers.Dense(1, activation='sigmoid'),
+])
+
+# モデルのコンパイル
+model.compile(optimizer='adam',
+              loss='binary_crossentropy',
+              metrics=['accuracy'])
+
+# モデルの学習
+history = model.fit(X_train, y_train,
+                    batch_size=1000,
+                    epochs=20,
+                    validation_data=(X_valid, y_valid))
+
+print(history.history)
+result = pd.DataFrame(history.history)
+print(result.head())
+
+result[['loss', 'val_loss']].plot()
+result[['accuracy', 'val_accuracy']].plot()
+plt.show()
+
+model.save(filepath='model_object.h5', save_format='h5')
 
 loaded_model = tf.keras.models.load_model('model_object.h5')
 y = loaded_model.predict(X_test.values)

@@ -1,9 +1,12 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import lightgbm as lgb
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import log_loss
+from sklearn.model_selection import train_test_split, StratifiedKFold
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.metrics import log_loss, accuracy_score
 import optuna
+from sklearn.preprocessing import LabelEncoder
+import numpy as np
 
 train = pd.read_csv('train.csv')
 test = pd.read_csv('test.csv')
@@ -49,10 +52,18 @@ X_train = train.drop('TARGET', axis=1)
 X_test = test.drop('TARGET', axis=1)
 y_train = train['TARGET']
 
-X_train, X_valid, y_train, y_valid = train_test_split(X_train, y_train, test_size=0.3, random_state=0, stratify=y_train)
+y_preds = []
+models = []
+oof_train = np.zeros(len((X_train),))
+cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=0)
+
+
 categorical_features = ['CODE_GENDER', 'FLAG_OWN_CAR', 'FLAG_OWN_REALTY', 'NAME_CONTRACT_TYPE', 'NAME_INCOME_TYPE',
                         'NAME_EDUCATION_TYPE', 'NAME_FAMILY_STATUS', 'NAME_HOUSING_TYPE', 'ORGANIZATION_TYPE',
                         'NAME_TYPE_SUITE', 'OCCUPATION_TYPE']
+
+
+X_train, X_valid, y_train, y_valid = train_test_split(X_train, y_train, test_size=0.3, random_state=0, stratify=y_train)
 
 
 def objective(trial):
@@ -60,7 +71,6 @@ def objective(trial):
         'task': 'train',
         'boosting_type': 'gbdt',
         'objective': 'binary',
-        'metric': {'l2'},
         'learning_rate': 0.01,
         'num_iterations': 100,
         'feature_fraction': 0.38,
@@ -88,7 +98,6 @@ params = {
     'task': 'train',
     'boosting_type': 'gbdt',
     'objective': 'binary',
-    'metric': {'l2'},
     'max_bin': study.best_params['max_bin'],
     'num_leaves': study.best_params['num_leaves'],
     'learning_rate': 0.01,
@@ -99,14 +108,42 @@ params = {
     'verbose': 0
 }
 
-lgb_train = lgb.Dataset(X_train, y_train, categorical_feature=categorical_features)
-lgb_eval = lgb.Dataset(X_valid, y_valid, reference=lgb_train, categorical_feature=categorical_features)
+train = data[:len(train)]
+test = data[len(train):]
+X_train2 = train.drop('TARGET', axis=1)
+X_test2 = test.drop('TARGET', axis=1)
+y_train2 = train['TARGET']
+for fold_id, (train_index, valid_index) in enumerate(cv.split(X_train2, y_train2)):
+    X_tr = X_train2.loc[train_index, :]
+    X_val = X_train2.loc[valid_index, :]
+    y_tr = y_train2.loc[train_index]
+    y_val = y_train2.loc[valid_index]
 
-model = lgb.train(params, lgb_train, valid_sets=[lgb_train, lgb_eval], verbose_eval=10, num_boost_round=1000,
-                  early_stopping_rounds=10)
-lgb.plot_importance(model, figsize=(12, 50))
-plt.show()
+    print(f'fold_id: {fold_id}')
+    print(f'y_tr y==1: {sum(y_tr)/len(y_tr)}')
+    print(f'y_val y==1: {sum(y_val)/len(y_val)}')
 
-y_pred = model.predict(X_test, num_iteration=model.best_iteration)
-submission['TARGET'] = y_pred
-submission.to_csv('../csv/15thSub.csv', index=False)
+    lgb_train = lgb.Dataset(X_tr, y_tr, categorical_feature=categorical_features)
+    lgb_eval = lgb.Dataset(X_val, y_val, reference=lgb_train,  categorical_feature=categorical_features)
+
+    model = lgb.train(params, lgb_train, valid_sets=[lgb_train, lgb_eval], verbose_eval=10, num_boost_round=1000, early_stopping_rounds=10)
+    oof_train[valid_index] = model.predict(X_val, num_iteration=model.best_iteration)
+    y_pred = model.predict(X_test2, num_iteration=model.best_iteration)
+    y_preds.append(y_pred)
+    models.append(model)
+
+# pred = pd.DataFrame(oof_train).to_csv('./submitCsv/submission_lightgbm_skfold.csv', index=False)
+scores = [m.best_score['valid_1']['binary_logloss'] for m in models]
+score = sum(scores) / len(scores)
+print('===CV scores===')
+print(scores)
+print(score)
+
+y_pred_off = (oof_train > 0.5).astype(int)
+accuracy_score(y_train2, y_pred_off)
+len(y_preds)
+var = y_preds[0][:10]
+y_sub = sum(y_preds) / len(y_preds)
+
+submission['TARGET'] = y_sub
+submission.to_csv('../csv/17thSub.csv', index=False)

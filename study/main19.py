@@ -35,16 +35,16 @@ for bin_feature in ['CODE_GENDER', 'FLAG_OWN_CAR', 'FLAG_OWN_REALTY', 'NAME_CONT
                     'NAME_EDUCATION_TYPE', 'NAME_FAMILY_STATUS', 'NAME_HOUSING_TYPE', 'ORGANIZATION_TYPE', 'NAME_TYPE_SUITE', 'OCCUPATION_TYPE']:
     data[bin_feature], uniques = pd.factorize(data[bin_feature])
 
-null_sum = 0
-drop_flag = None
-for col in data.columns:
-    # 欠損の補間
-    null_sum = data[col].isnull().sum()
-    if null_sum > 0:
-        if data[col].dtype == object:
-            data[col] = data[col].fillna(data[col].mode()[0])
-        else:
-            data[col] = data[col].fillna(data[col].mean())
+# null_sum = 0
+# drop_flag = None
+# for col in data.columns:
+#     # 欠損の補間
+#     null_sum = data[col].isnull().sum()
+#     if null_sum > 0:
+#         if data[col].dtype == object:
+#             data[col] = data[col].fillna(data[col].mode()[0])
+#         else:
+#             data[col] = data[col].fillna(data[col].mean())
 
 data = data.drop(['OWN_CAR_AGE'], axis=1)
 
@@ -68,7 +68,7 @@ y_train = train['TARGET']
 y_preds = []
 models = []
 oof_train = np.zeros(len((X_train),))
-cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=0)
+cv = StratifiedKFold(n_splits=7, shuffle=True, random_state=0)
 
 categorical_features = ['CODE_GENDER', 'FLAG_OWN_CAR', 'FLAG_OWN_REALTY', 'NAME_CONTRACT_TYPE', 'NAME_INCOME_TYPE',
                     'NAME_EDUCATION_TYPE', 'NAME_FAMILY_STATUS', 'NAME_HOUSING_TYPE', 'ORGANIZATION_TYPE','NAME_TYPE_SUITE', 'OCCUPATION_TYPE']
@@ -101,11 +101,14 @@ for fold_id, (train_index, valid_index) in enumerate(cv.split(X_train, y_train))
     lgb_eval = lgb.Dataset(X_val, y_val, reference=lgb_train,  categorical_feature=categorical_features)
 
     model = lgb.train(params, lgb_train, valid_sets=[lgb_train, lgb_eval], verbose_eval=10, num_boost_round=2000, early_stopping_rounds=10)
+    lgb.plot_importance(model, figsize=(12, 50))
+
     oof_train[valid_index] = model.predict(X_val, num_iteration=model.best_iteration)
     y_pred = model.predict(X_test, num_iteration=model.best_iteration)
     y_preds.append(y_pred)
     models.append(model)
 
+plt.show()
 # pred = pd.DataFrame(oof_train).to_csv('./submitCsv/submission_lightgbm_skfold.csv', index=False)
 scores = [m.best_score['valid_1']['binary_logloss'] for m in models]
 score = sum(scores) / len(scores)
@@ -120,4 +123,4 @@ var = y_preds[0][:10]
 y_sub = sum(y_preds) / len(y_preds)
 
 submission['TARGET'] = y_sub
-submission.to_csv('../csv/16thSub.csv', index=False)
+submission.to_csv('../csv/19thSub.csv', index=False)
